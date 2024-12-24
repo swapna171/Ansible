@@ -1,0 +1,50 @@
+---
+- name: ConsolidationRequeingService Deployment
+  hosts: B2B
+  become: yes
+  serial: 2
+  tasks:
+    - name: backup of Consoildation Requeing of jar file
+      copy:
+        src: /home/test.txt
+        dest: /home/test-2024-Dec.txt
+        remote_src: true
+
+    - name: Stop Consolidation Requeing Service
+      args:
+        chdir: /etc/init.d
+      command:
+        ./MS_consolidationRequeuingService.jar stop
+      ignore_errors: yes
+    - pause:
+       seconds: 10
+
+
+    - name: Copy of new jar file
+      copy:
+        src: /tmp/test_new.jar
+        dest: /home/test_new.jar
+    - shell:
+        "chown netcool:ncoadmin /home/test_new.jar"
+    - pause:
+        seconds: 20
+
+    - name: Start Consolidation Requeing Service
+      args:
+        chdir: /etc/init.d
+      command:
+        ./MS_consolidationRequeuingService.jar start
+      ignore_errors: yes
+    - pause:
+       seconds: 10
+       prompt: "Waiting after start"
+
+
+    - name: Service status after start
+
+      args:
+        chdir: /etc/init.d
+      command:
+        ./MS_consolidationRequeuingService.jar status
+      ignore_errors: yes
+      register: out10
